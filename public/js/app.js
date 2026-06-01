@@ -87,7 +87,16 @@ const App = (() => {
   // Finds all elements matching download-related selectors and hides them.
   // Only runs when window.OFFIQSHARE_DESKTOP === true (set by Tauri init
   // script before page JS). Survives reloads and navigation. Idempotent.
-  function applyDesktopHiding() {
+    function applyDesktopHiding() {
+
+    alert(
+        "Desktop flag = " +
+        window.OFFIQSHARE_DESKTOP
+    );
+
+    if (!isDesktop) return;
+
+    // rest of your code...
     if (!isDesktop) return;
 
     // 1. Any element explicitly tagged for desktop hiding
