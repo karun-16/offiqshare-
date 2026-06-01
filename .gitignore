@@ -1,0 +1,3 @@
+server/node_modules/
+desktop/src-tauri/target/
+desktop/node_modules/

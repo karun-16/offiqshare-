@@ -6,27 +6,33 @@
  * transfer history tab, resume-on-reconnect, and desktop-mode detection.
  *
  * Desktop mode:
- *   When running inside the Tauri desktop app, Tauri injects:
- *     window.OFFIQSHARE_DESKTOP = true
+ *   When running inside the Tauri desktop app, Tauri injects
+ *   window.OFFIQSHARE_DESKTOP = true via an initialization script that
+ *   runs before any page JS on every load, reload, and navigation.
  *   This causes all download-related UI elements to be hidden via the
  *   CSS class "desktop-hidden". Browser users see everything unchanged.
  */
-
+throw new Error("APPJS TEST");
 'use strict';
 
 // ── Desktop Mode Detection ────────────────────────────────────────────────
-// Runs immediately (before DOMContentLoaded) so elements are hidden before
-// first paint, preventing any flash of download UI for desktop users.
+// Tauri registers an initialization script (add_script_to_execute_on_document_creation)
+// that sets window.OFFIQSHARE_DESKTOP = true before any page JS runs — including
+// on F5 reloads and in-app navigation. Browser users never have this flag set.
+setTimeout(() => {
+  alert(
+    "OFFIQSHARE_DESKTOP=" + window.OFFIQSHARE_DESKTOP +
+    "\nisDesktop=" + (window.OFFIQSHARE_DESKTOP === true)
+  );
+}, 1000);
+// Inject the hiding rule immediately (before DOMContentLoaded) so download
+// UI never flashes for desktop users even on slow connections.
+// isDesktop is already resolved above from window.OFFIQSHARE_DESKTOP.
 (function applyDesktopMode() {
-  if (!window.OFFIQSHARE_DESKTOP) return;
-
-  // Inject a <style> rule that hides all download-related elements.
-  // Using a CSS class rather than inline display:none keeps things clean
-  // and easy to override or debug.
+  if (!isDesktop) return;
   const style = document.createElement('style');
   style.id = 'offiqshare-desktop-mode';
   style.textContent = '.desktop-hidden { display: none !important; }';
-  // Append to <head> if available, otherwise <html> root
   (document.head || document.documentElement).appendChild(style);
 })();
 
@@ -41,9 +47,8 @@ const App = (() => {
     // Apply desktop-mode hiding after DOM is ready.
     // This handles any elements that are dynamically rendered or
     // exist in the DOM but weren't caught by the pre-DOMContentLoaded pass.
-    setInterval(() => {
-  applyDesktopHiding();
-}, 1000);
+    applyDesktopHiding();
+
     // Check URL for ?r=CODE
     const params = new URLSearchParams(location.search);
     const urlCode = params.get('r');
@@ -79,31 +84,31 @@ const App = (() => {
   }
 
   // ── Desktop Hiding ────────────────────────────────────────────
-  // Finds all elements marked with data-desktop-hide="true" OR
-  // matching known download-related selectors, and hides them.
-  // Safe to call multiple times (idempotent).
+  // Finds all elements matching download-related selectors and hides them.
+  // Only runs when window.OFFIQSHARE_DESKTOP === true (set by Tauri init
+  // script before page JS). Survives reloads and navigation. Idempotent.
   function applyDesktopHiding() {
-    if (!window.OFFIQSHARE_DESKTOP) return;
+    if (!isDesktop) return;
 
     // 1. Any element explicitly tagged for desktop hiding
     document.querySelectorAll('[data-desktop-hide]').forEach(el => {
       el.classList.add('desktop-hidden');
     });
 
-    // 2. Known selector patterns for download-related UI
+    // 2. Known selector patterns for all download-related UI
     const downloadSelectors = [
       // Navbar download link
       'a[href="download.html"]',
       'a[href*="download.html"]',
       // Desktop announcement card / badge (homepage hero)
       '.desktop-announce',
-      // Any element with a download-related class
-      '.dl-card',
+      // Download page card grid and individual cards
       '.dl-cards-section',
       '.dl-cards-grid',
-      // Download page links that are buttons
+      '.dl-card',
+      // Primary download buttons
       '.dl-btn-primary',
-      // Windows-specific download button text matches
+      // GitHub releases links (Windows download button)
       'a[href*="releases"]',
     ];
 
@@ -111,6 +116,15 @@ const App = (() => {
       document.querySelectorAll(sel).forEach(el => {
         el.classList.add('desktop-hidden');
       });
+    });
+
+    // Explicit inline-style hiding for elements that may not respond to
+    // the CSS class (e.g. inline-style overrides or late-rendered nodes).
+    document.querySelectorAll('.desktop-announce').forEach(el => {
+      el.style.display = 'none';
+    });
+    document.querySelectorAll('a[href="download.html"]').forEach(el => {
+      el.style.display = 'none';
     });
   }
 
