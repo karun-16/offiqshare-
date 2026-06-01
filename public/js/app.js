@@ -41,8 +41,9 @@ const App = (() => {
     // Apply desktop-mode hiding after DOM is ready.
     // This handles any elements that are dynamically rendered or
     // exist in the DOM but weren't caught by the pre-DOMContentLoaded pass.
-    applyDesktopHiding();
-
+    setInterval(() => {
+  applyDesktopHiding();
+}, 1000);
     // Check URL for ?r=CODE
     const params = new URLSearchParams(location.search);
     const urlCode = params.get('r');
