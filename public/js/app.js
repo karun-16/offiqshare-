@@ -14,7 +14,10 @@
  */
 console.log("APPJS VERSION TEST JUNE 2");
 'use strict';
-const isDesktop = window.OFFIQSHARE_DESKTOP === true;
+const isDesktop =
+    window.OFFIQSHARE_DESKTOP === true ||
+    navigator.userAgent.includes('OffiqShare') ||
+    navigator.userAgent.includes('Tauri');
 
 // ── Desktop Mode Detection ────────────────────────────────────────────────
 // Tauri registers an initialization script (add_script_to_execute_on_document_creation)
