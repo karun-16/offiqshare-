@@ -12,7 +12,7 @@
  *   This causes all download-related UI elements to be hidden via the
  *   CSS class "desktop-hidden". Browser users see everything unchanged.
  */
-
+console.log("APPJS VERSION TEST JUNE 2");
 'use strict';
 const isDesktop = window.OFFIQSHARE_DESKTOP === true;
 
