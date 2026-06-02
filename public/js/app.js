@@ -12,19 +12,15 @@
  *   This causes all download-related UI elements to be hidden via the
  *   CSS class "desktop-hidden". Browser users see everything unchanged.
  */
-throw new Error("APPJS TEST");
+
 'use strict';
+const isDesktop = window.OFFIQSHARE_DESKTOP === true;
 
 // ── Desktop Mode Detection ────────────────────────────────────────────────
 // Tauri registers an initialization script (add_script_to_execute_on_document_creation)
 // that sets window.OFFIQSHARE_DESKTOP = true before any page JS runs — including
 // on F5 reloads and in-app navigation. Browser users never have this flag set.
-setTimeout(() => {
-  alert(
-    "OFFIQSHARE_DESKTOP=" + window.OFFIQSHARE_DESKTOP +
-    "\nisDesktop=" + (window.OFFIQSHARE_DESKTOP === true)
-  );
-}, 1000);
+
 // Inject the hiding rule immediately (before DOMContentLoaded) so download
 // UI never flashes for desktop users even on slow connections.
 // isDesktop is already resolved above from window.OFFIQSHARE_DESKTOP.
@@ -89,10 +85,6 @@ const App = (() => {
   // script before page JS). Survives reloads and navigation. Idempotent.
     function applyDesktopHiding() {
 
-    alert(
-        "Desktop flag = " +
-        window.OFFIQSHARE_DESKTOP
-    );
 
     if (!isDesktop) return;
 
